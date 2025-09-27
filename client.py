@@ -3,12 +3,19 @@ import threading
 import tkinter as tk
 from tkinter import scrolledtext
 
-HOST = "127.0.0.1"
-PORT = 5000
 
+HOST = input("Server IP girin: ") 
+PORT = int(input("Server port girin: "))  
+
+#  Socket oluştur bağlan 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client_socket.connect((HOST, PORT))
+try:
+    client_socket.connect((HOST, PORT))
+except Exception as e:
+    print(f"Server'a bağlanılamadı: {e}")
+    exit()
 
+# Mesaj alma 
 def receive_messages():
     while True:
         try:
@@ -20,6 +27,7 @@ def receive_messages():
         except:
             break
 
+#  Mesaj gönder 
 def send_message():
     mesaj = entry.get()
     if mesaj:
@@ -28,7 +36,7 @@ def send_message():
         chat_area.see(tk.END)
         entry.delete(0, tk.END)
 
-# --- UI kısmı ---
+# UI 
 root = tk.Tk()
 root.title("Client")
 
@@ -41,6 +49,7 @@ entry.pack(side=tk.LEFT, padx=10, pady=5)
 send_btn = tk.Button(root, text="Gönder", command=send_message)
 send_btn.pack(side=tk.LEFT)
 
+# Mesaj alma thread
 threading.Thread(target=receive_messages, daemon=True).start()
 
 root.mainloop()

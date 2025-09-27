@@ -3,11 +3,17 @@ import threading
 import tkinter as tk
 from tkinter import scrolledtext
 
-HOST = "127.0.0.1"
-PORT = 5000
+#  Server socket 
+HOST = socket.gethostbyname(socket.gethostname())
+PORT = 0  
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.bind((HOST, PORT))
+PORT = server_socket.getsockname()[1]  
+server_socket.listen()
 
 clients = []
 
+# Client handler
 def handle_client(conn, addr):
     while True:
         try:
@@ -19,12 +25,11 @@ def handle_client(conn, addr):
         except:
             break
     conn.close()
-    clients.remove(conn)
+    if conn in clients:
+        clients.remove(conn)
 
+#  Server başlat 
 def start_server():
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((HOST, PORT))
-    server_socket.listen()
     chat_area.insert(tk.END, f"Server başlatıldı: {HOST}:{PORT}\n")
     chat_area.see(tk.END)
 
@@ -35,6 +40,7 @@ def start_server():
         chat_area.see(tk.END)
         threading.Thread(target=handle_client, args=(conn, addr), daemon=True).start()
 
+# Mesaj gönder 
 def send_message():
     mesaj = entry.get()
     if mesaj:
@@ -47,7 +53,7 @@ def send_message():
         chat_area.see(tk.END)
         entry.delete(0, tk.END)
 
-# --- UI kısmı ---
+#  UI 
 root = tk.Tk()
 root.title("Server")
 
@@ -60,6 +66,7 @@ entry.pack(side=tk.LEFT, padx=10, pady=5)
 send_btn = tk.Button(root, text="Gönder", command=send_message)
 send_btn.pack(side=tk.LEFT)
 
+# Server thread
 threading.Thread(target=start_server, daemon=True).start()
 
 root.mainloop()
