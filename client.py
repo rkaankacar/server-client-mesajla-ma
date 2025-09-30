@@ -1,21 +1,32 @@
 import socket
 import threading
 import tkinter as tk
-from tkinter import scrolledtext
+from tkinter import scrolledtext, simpledialog, messagebox
 
 
-HOST = input("Server IP girin: ") 
-PORT = int(input("Server port girin: "))  
+root = tk.Tk()
+root.withdraw()  
 
-#  Socket oluştur bağlan 
+HOST = simpledialog.askstring("Giriş", "Server IP girin:")
+PORT = simpledialog.askinteger("Giriş", "Server port girin:")
+
+if not HOST or not PORT:
+    messagebox.showerror("Hata", "IP ve port girilmedi!")
+    exit()
+
+
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 try:
     client_socket.connect((HOST, PORT))
 except Exception as e:
-    print(f"Server'a bağlanılamadı: {e}")
-    exit()
+    messagebox.showerror("Hata", f"Server'a bağlanılamadı: {e}")
+    exit() 
 
-# Mesaj alma 
+
+root.deiconify()
+root.title("Client")
+
+
 def receive_messages():
     while True:
         try:
@@ -27,7 +38,7 @@ def receive_messages():
         except:
             break
 
-#  Mesaj gönder 
+
 def send_message():
     mesaj = entry.get()
     if mesaj:
@@ -36,9 +47,6 @@ def send_message():
         chat_area.see(tk.END)
         entry.delete(0, tk.END)
 
-# UI 
-root = tk.Tk()
-root.title("Client")
 
 chat_area = scrolledtext.ScrolledText(root, width=50, height=20)
 chat_area.pack(padx=10, pady=10)
@@ -49,7 +57,7 @@ entry.pack(side=tk.LEFT, padx=10, pady=5)
 send_btn = tk.Button(root, text="Gönder", command=send_message)
 send_btn.pack(side=tk.LEFT)
 
-# Mesaj alma thread
+
 threading.Thread(target=receive_messages, daemon=True).start()
 
 root.mainloop()
