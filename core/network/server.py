@@ -6,8 +6,9 @@ class ChatServer:
         self.port = port
         self.clients = []
 
-       
+    
         self.plain_messages = []    
+ 
         self.encrypted_messages = []  
 
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -30,15 +31,22 @@ class ChatServer:
                 data = conn.recv(1024).decode()
                 if not data:
                     break
-             
-                self.plain_messages.append(data)
+                
+              
+                self.encrypted_messages.append(data)
+                
+              
                 handler(addr, data)  
             except:
                 break
         conn.close()
-        self.clients.remove(conn)
+        if conn in self.clients:
+            self.clients.remove(conn)
 
     def send(self, text):
+        """
+        Bu fonksiyon Server'dan tüm Client'lara mesaj yollar.
+        """
         for c in self.clients:
             try:
                 c.sendall(text.encode())

@@ -1,3 +1,3 @@
 ﻿# server-client-mesajla-ma
 
-Hocam Duzelttim 
+Kriptoloji Dersi Proje 
