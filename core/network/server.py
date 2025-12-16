@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # -*- coding: utf-8 -*-
 """
 Chat Server - RSA Key Exchange destekli
@@ -9,12 +10,16 @@ import json
 
 from core.network.key_exchange import KeyExchangeServer, is_key_exchange_message
 
+=======
+import socket, threading
+>>>>>>> 6fbfecac606b02cc84d206202e00760216dde9fa
 
 class ChatServer:
     def __init__(self, host, port):
         self.host = host
         self.port = port
         self.clients = []
+<<<<<<< HEAD
         self.client_info = {}  # {conn: {"addr": addr, "key_exchange": KeyExchangeServer, "symmetric_key": bytes}}
         
         self.plain_messages = []
@@ -24,6 +29,14 @@ class ChatServer:
         self.key_exchange_enabled = True
         self.default_algo = "AES"  # Varsayılan simetrik algoritma
         
+=======
+
+    
+        self.plain_messages = []    
+ 
+        self.encrypted_messages = []  
+
+>>>>>>> 6fbfecac606b02cc84d206202e00760216dde9fa
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.bind((self.host, self.port))
         self.port = self.server_socket.getsockname()[1]
@@ -36,6 +49,7 @@ class ChatServer:
         while True:
             conn, addr = self.server_socket.accept()
             self.clients.append(conn)
+<<<<<<< HEAD
             
             # Her client için key exchange yöneticisi oluştur
             key_ex = KeyExchangeServer(2048)
@@ -56,11 +70,14 @@ class ChatServer:
                 except Exception as e:
                     print(f"[Server] Handshake hatası: {e}")
             
+=======
+>>>>>>> 6fbfecac606b02cc84d206202e00760216dde9fa
             threading.Thread(target=self._handle_client, args=(conn, addr, handler), daemon=True).start()
 
     def _handle_client(self, conn, addr, handler):
         while True:
             try:
+<<<<<<< HEAD
                 data = conn.recv(4096).decode()
                 if not data:
                     break
@@ -135,10 +152,32 @@ class ChatServer:
 
     def send(self, text):
         """Bu fonksiyon Server'dan tüm Client'lara mesaj yollar."""
+=======
+                data = conn.recv(1024).decode()
+                if not data:
+                    break
+                
+              
+                self.encrypted_messages.append(data)
+                
+              
+                handler(addr, data)  
+            except:
+                break
+        conn.close()
+        if conn in self.clients:
+            self.clients.remove(conn)
+
+    def send(self, text):
+        """
+        Bu fonksiyon Server'dan tüm Client'lara mesaj yollar.
+        """
+>>>>>>> 6fbfecac606b02cc84d206202e00760216dde9fa
         for c in self.clients:
             try:
                 c.sendall(text.encode())
             except:
+<<<<<<< HEAD
                 pass
 
     def send_to(self, conn, text):
@@ -147,3 +186,6 @@ class ChatServer:
             conn.sendall(text.encode())
         except:
             pass
+=======
+                pass
+>>>>>>> 6fbfecac606b02cc84d206202e00760216dde9fa

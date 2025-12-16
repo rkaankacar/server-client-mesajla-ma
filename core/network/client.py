@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # -*- coding: utf-8 -*-
 """
 Chat Client - RSA Key Exchange destekli
@@ -10,12 +11,19 @@ import json
 from core.encryption.encryption_factory import EncryptionFactory
 from core.network.key_exchange import KeyExchangeClient, is_key_exchange_message
 
+=======
+import socket
+import threading
+
+from core.encryption.encryption_factory import EncryptionFactory
+>>>>>>> 6fbfecac606b02cc84d206202e00760216dde9fa
 
 class ChatClient:
     def __init__(self, host, port):
         self.host = host
         self.port = port
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+<<<<<<< HEAD
         
         # Key Exchange
         self.key_exchange = KeyExchangeClient()
@@ -71,10 +79,37 @@ class ChatClient:
             print(f"[Client] '{message}' -> '{encrypted_message[:50]}...' olarak şifrelenip gönderildi.")
             self.send(encrypted_message)
             
+=======
+
+    def connect(self):
+        self.client_socket.connect((self.host, self.port))
+
+    def send(self, message):
+        """Bu fonksiyon sadece veriyi yollar (Raw send)."""
+        self.client_socket.sendall(message.encode())
+
+    def send_encrypted(self, message, algo_type, **kwargs):
+        """
+        Mesajı seçilen algoritmaya göre şifreler ve öyle gönderir.
+        Kullanımı: client.send_encrypted("Selam", "Sezar", shift=5)
+        """
+        try:
+        
+            cipher = EncryptionFactory.get_cipher(algo_type, **kwargs)
+            
+        
+            encrypted_message = cipher.encrypt(message)
+            
+           
+            print(f"[Client] '{message}' -> '{encrypted_message}' olarak şifrelenip gönderildi.")
+            
+            self.send(encrypted_message)
+>>>>>>> 6fbfecac606b02cc84d206202e00760216dde9fa
         except Exception as e:
             print(f"Şifreleme hatası: {e}")
 
     def start_receiving(self, handler):
+<<<<<<< HEAD
         """Mesaj alma thread'ini başlatır."""
         self.on_message_received = handler
         threading.Thread(target=self._receive, args=(handler,), daemon=True).start()
@@ -144,3 +179,16 @@ class ChatClient:
     def get_symmetric_algo(self) -> str:
         """Kullanılan simetrik algoritmayı döndürür."""
         return self.symmetric_algo
+=======
+        threading.Thread(target=self._receive, args=(handler,), daemon=True).start()
+
+    def _receive(self, handler):
+        while True:
+            try:
+                data = self.client_socket.recv(1024).decode()
+                if not data:
+                    break
+                handler(data)
+            except:
+                break
+>>>>>>> 6fbfecac606b02cc84d206202e00760216dde9fa

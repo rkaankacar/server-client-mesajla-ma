@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # -*- coding: utf-8 -*-
 """
 Encryption Factory - Güncellenmiş Versiyon
@@ -6,6 +7,8 @@ Kütüphane tabanlı ve manuel implementasyonları destekler.
 """
 
 # Klasik şifreler
+=======
+>>>>>>> 6fbfecac606b02cc84d206202e00760216dde9fa
 from core.encryption.caesar import CaesarCipher
 from core.encryption.vigenere import VigenereCipher
 from core.encryption.substitution import SubstitutionCipher
@@ -18,12 +21,16 @@ from core.encryption.polybius import PolybiusCipher
 from core.encryption.pigpen import PigpenCipher
 from core.encryption.route import RouteCipher
 from core.encryption.hill import HillCipher
+<<<<<<< HEAD
 
 # Eski implementasyonlar (geriye uyumluluk için)
+=======
+>>>>>>> 6fbfecac606b02cc84d206202e00760216dde9fa
 from core.encryption.rsa import RSACipher
 from core.encryption.des import DESCipher
 from core.encryption.dsa import DSACipher
 
+<<<<<<< HEAD
 # Yeni modern kriptografi - Library tabanlı
 from core.encryption.aes_library import AESLibraryCipher
 from core.encryption.des_library import DESLibraryCipher
@@ -214,3 +221,40 @@ class EncryptionFactory:
             return EncryptionFactory.MANUAL_ALGORITHMS.copy()
         else:
             return EncryptionFactory.ALL_ALGORITHMS.copy()
+=======
+class EncryptionFactory:
+    @staticmethod
+    def get_cipher(algo: str, **kwargs):
+        if algo == "Sezar":
+            return CaesarCipher(kwargs.get("shift", 3))
+        elif algo == "Vigenere":
+            return VigenereCipher(kwargs.get("key", "KEY"))
+        elif algo == "Substitution":
+            return SubstitutionCipher()
+        elif algo == "Affine":
+            return AffineCipher(kwargs.get("a", 5), kwargs.get("b", 8))
+        elif algo == "RailFence":
+            return RailFenceCipher(kwargs.get("rails", 3))
+        elif algo == "Playfair":
+            return PlayfairCipher(kwargs.get("key", "KEY"))
+        elif algo == "ROT13":
+            return Rot13Cipher()
+        elif algo == "Columnar":
+            return ColumnarCipher(kwargs.get("key", "KEY"))
+        elif algo == "Polybius":
+            return PolybiusCipher(kwargs.get("key", ""))
+        elif algo == "Pigpen":
+            return PigpenCipher()
+        elif algo == "Route":
+            return RouteCipher(kwargs.get("rails", 4))
+        elif algo == "Hill":
+            return HillCipher(kwargs.get("key", "HILL"))
+        elif algo == "RSA":
+            return RSACipher()
+        elif algo == "DES":
+            return DESCipher(kwargs.get("key", "KEY"))
+        elif algo == "DSA":
+            return DSACipher()
+        else:
+            raise ValueError("Geçersiz algoritma seçimi.")
+>>>>>>> 6fbfecac606b02cc84d206202e00760216dde9fa
