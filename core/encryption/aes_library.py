@@ -18,16 +18,20 @@ class AESLibraryCipher:
     - Padding: PKCS7
     """
     
-    def __init__(self, key: str = None):
+    def __init__(self, key = None):
         """
         Args:
-            key: 16 karakterlik anahtar. Belirtilmezse rastgele üretilir.
+            key: 16 byte (bytes) veya 16 karakter (str). Belirtilmezse rastgele üretilir.
         """
         if key is None:
             self.key = get_random_bytes(16)
         else:
+            if isinstance(key, str):
+                key_bytes = key.encode('utf-8')
+            else:
+                key_bytes = key
+                
             # Key'i 16 byte'a ayarla
-            key_bytes = key.encode('utf-8')
             if len(key_bytes) < 16:
                 key_bytes = key_bytes.ljust(16, b'\0')
             elif len(key_bytes) > 16:
@@ -108,6 +112,70 @@ class AESLibraryCipher:
     def get_key_base64(self) -> str:
         """Anahtarı base64 formatında döndürür."""
         return base64.b64encode(self.key).decode('utf-8')
+
+    def encrypt_bytes(self, data: bytes) -> bytes:
+        """
+        Byte verisini AES-128-CBC ile şifreler (Raw).
+        
+        Args:
+            data: Şifrelenecek byte verisi
+            
+        Returns:
+            IV (16 bytes) + Encrypted Data (bytes)
+        """
+        if not data:
+            return b""
+        
+        try:
+            # Rastgele IV oluştur
+            iv = get_random_bytes(16)
+            
+            # Cipher oluştur
+            cipher = AES.new(self.key, AES.MODE_CBC, iv)
+            
+            # Padding uygula
+            padded_data = pad(data, AES.block_size)
+            
+            # Şifrele
+            ciphertext = cipher.encrypt(padded_data)
+            
+            # IV + ciphertext birleştir
+            return iv + ciphertext
+            
+        except Exception as e:
+            print(f"AES Byte Şifreleme Hatası: {e}")
+            return b""
+
+    def decrypt_bytes(self, encrypted_data: bytes) -> bytes:
+        """
+        AES-128-CBC ile şifrelenmiş byte verisini çözer (Raw).
+        
+        Args:
+            encrypted_data: IV (16 bytes) + Encrypted Data (bytes)
+            
+        Returns:
+            Çözülmüş byte verisi
+        """
+        if not encrypted_data or len(encrypted_data) < 16:
+            return b""
+        
+        try:
+            # IV ve ciphertext'i ayır
+            iv = encrypted_data[:16]
+            actual_ciphertext = encrypted_data[16:]
+            
+            # Cipher oluştur
+            cipher = AES.new(self.key, AES.MODE_CBC, iv)
+            
+            # Çöz ve unpad
+            decrypted_padded = cipher.decrypt(actual_ciphertext)
+            plaintext = unpad(decrypted_padded, AES.block_size)
+            
+            return plaintext
+            
+        except Exception as e:
+            print(f"AES Byte Çözme Hatası: {e}")
+            return b""
 
 
 # Test

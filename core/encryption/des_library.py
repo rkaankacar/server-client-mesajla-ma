@@ -18,16 +18,20 @@ class DESLibraryCipher:
     - Padding: PKCS7
     """
     
-    def __init__(self, key: str = None):
+    def __init__(self, key = None):
         """
         Args:
-            key: 8 karakterlik anahtar. Belirtilmezse rastgele üretilir.
+            key: 8 byte (bytes) veya 8 karakter (str). Belirtilmezse rastgele üretilir.
         """
         if key is None:
             self.key = get_random_bytes(8)
         else:
+            if isinstance(key, str):
+                key_bytes = key.encode('utf-8')
+            else:
+                key_bytes = key
+
             # Key'i 8 byte'a ayarla
-            key_bytes = key.encode('utf-8')
             if len(key_bytes) < 8:
                 key_bytes = key_bytes.ljust(8, b'\0')
             elif len(key_bytes) > 8:
@@ -108,6 +112,70 @@ class DESLibraryCipher:
     def get_key_base64(self) -> str:
         """Anahtarı base64 formatında döndürür."""
         return base64.b64encode(self.key).decode('utf-8')
+
+    def encrypt_bytes(self, data: bytes) -> bytes:
+        """
+        Byte verisini DES-CBC ile şifreler (Raw).
+        
+        Args:
+            data: Şifrelenecek byte verisi
+            
+        Returns:
+            IV (8 bytes) + Encrypted Data (bytes)
+        """
+        if not data:
+            return b""
+        
+        try:
+            # Rastgele IV oluştur
+            iv = get_random_bytes(8)
+            
+            # Cipher oluştur
+            cipher = DES.new(self.key, DES.MODE_CBC, iv)
+            
+            # Padding uygula
+            padded_data = pad(data, DES.block_size)
+            
+            # Şifrele
+            ciphertext = cipher.encrypt(padded_data)
+            
+            # IV + ciphertext birleştir
+            return iv + ciphertext
+            
+        except Exception as e:
+            print(f"DES Byte Şifreleme Hatası: {e}")
+            return b""
+
+    def decrypt_bytes(self, encrypted_data: bytes) -> bytes:
+        """
+        DES-CBC ile şifrelenmiş byte verisini çözer (Raw).
+        
+        Args:
+            encrypted_data: IV (8 bytes) + Encrypted Data (bytes)
+            
+        Returns:
+            Çözülmüş byte verisi
+        """
+        if not encrypted_data or len(encrypted_data) < 8:
+            return b""
+        
+        try:
+            # IV ve ciphertext'i ayır
+            iv = encrypted_data[:8]
+            actual_ciphertext = encrypted_data[8:]
+            
+            # Cipher oluştur
+            cipher = DES.new(self.key, DES.MODE_CBC, iv)
+            
+            # Çöz ve unpad
+            decrypted_padded = cipher.decrypt(actual_ciphertext)
+            plaintext = unpad(decrypted_padded, DES.block_size)
+            
+            return plaintext
+            
+        except Exception as e:
+            print(f"DES Byte Çözme Hatası: {e}")
+            return b""
 
 
 # Test
