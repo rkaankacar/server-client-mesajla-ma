@@ -15,22 +15,11 @@ class ClientUI:
         self.root = tk.Tk()
         self.root.withdraw()
 
-        # Simetrik algoritma seçimi (Key Exchange için)
-        self.symmetric_algo_choice = simpledialog.askstring(
-            "Simetrik Algoritma", 
-            "Key Exchange için algoritma seçin (AES veya DES):",
-            initialvalue="AES"
-        )
-        if self.symmetric_algo_choice not in ["AES", "DES"]:
-            self.symmetric_algo_choice = "AES"
-
-        # Server bağlantı bilgileri
-        self.HOST = simpledialog.askstring("Giriş", "Server IP girin:", initialvalue="127.0.0.1")
-        self.PORT = simpledialog.askinteger("Giriş", "Server port girin:", initialvalue=12345)
-
-        if not self.HOST or not self.PORT:
-            messagebox.showerror("Hata", "IP ve port girilmedi!")
-            exit()
+        # Server bağlantı ve algoritma seçimi için tek bir pencere aç
+        if not self._show_connection_dialog():
+             # Kullanıcı pencereyi kapattıysa veya iptal ettiyse çık
+            self.root.destroy()
+            return
 
         self.client = ChatClient(self.HOST, self.PORT)
         self.client.set_preferred_algo(self.symmetric_algo_choice)
@@ -40,6 +29,7 @@ class ClientUI:
             self.client.connect()
         except Exception as e:
             messagebox.showerror("Hata", f"Server'a bağlanılamadı: {e}")
+            self.root.destroy()  # Hata durumunda uygulamayı kapat
             exit()
 
         self.root.deiconify()
@@ -51,6 +41,82 @@ class ClientUI:
         
         # Mesaj alma thread'i
         self.client.start_receiving(self.handle_received)
+
+    def _show_connection_dialog(self):
+        """Bağlantı ayarları için özel bir dialog penceresi gösterir."""
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Giriş Ayarları")
+        dialog.geometry("350x300")
+        dialog.configure(bg="#1a1a2e")
+        dialog.resizable(False, False)
+
+        # Değişkenler
+        algo_var = tk.StringVar(value="AES")
+        ip_var = tk.StringVar(value="127.0.0.1")
+        port_var = tk.IntVar(value=12345)
+        
+        # Sonuç saklama
+        self.connection_info = None
+
+        # Başlık
+        tk.Label(dialog, text="🔐 Bağlantı Ayarları", font=("Arial", 14, "bold"), 
+                 bg="#1a1a2e", fg="#e94560").pack(pady=15)
+
+        # Algoritma Seçimi
+        algo_frame = tk.LabelFrame(dialog, text="Algoritma", bg="#1a1a2e", fg="#00ff88")
+        algo_frame.pack(padx=20, pady=5, fill="x")
+        
+        ttk.Radiobutton(algo_frame, text="AES", variable=algo_var, value="AES").pack(side=tk.LEFT, padx=20, pady=5)
+        ttk.Radiobutton(algo_frame, text="DES", variable=algo_var, value="DES").pack(side=tk.LEFT, padx=20, pady=5)
+
+        # Sunucu Bilgileri
+        conn_frame = tk.LabelFrame(dialog, text="Sunucu Bilgileri", bg="#1a1a2e", fg="#00ff88")
+        conn_frame.pack(padx=20, pady=10, fill="x")
+
+        tk.Label(conn_frame, text="IP Adresi:", bg="#1a1a2e", fg="white").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+        tk.Entry(conn_frame, textvariable=ip_var, width=20).grid(row=0, column=1, padx=5, pady=5)
+
+        tk.Label(conn_frame, text="Port:", bg="#1a1a2e", fg="white").grid(row=1, column=0, padx=5, pady=5, sticky="e")
+        tk.Entry(conn_frame, textvariable=port_var, width=20).grid(row=1, column=1, padx=5, pady=5)
+
+        # Buton
+        def on_connect():
+            if not ip_var.get() or not port_var.get():
+                messagebox.showwarning("Hata", "Lütfen tüm alanları doldurun!", parent=dialog)
+                return
+            
+            try:
+                # Port geçerliliğini kontrol et
+                port = int(port_var.get())
+                if port < 1 or port > 65535:
+                    raise ValueError
+            except ValueError:
+                messagebox.showerror("Hata", "Geçersiz Port Numarası!", parent=dialog)
+                return
+
+            self.symmetric_algo_choice = algo_var.get()
+            self.HOST = ip_var.get()
+            self.PORT = port
+            
+            self.connection_info = True # Başarılı flag
+            dialog.destroy()
+
+        connect_btn = tk.Button(dialog, text="BAĞLAN", command=on_connect,
+                                bg="#00ff88", fg="black", font=("Arial", 10, "bold"),
+                                activebackground="#4ecca3", width=20)
+        connect_btn.pack(pady=15)
+
+        # Pencere kapatılınca ana uygulamayı da kapatmak için
+        dialog.protocol("WM_DELETE_WINDOW", lambda: dialog.destroy())
+        
+        # Modal pencere yap (ana pencereye erişimi engelle)
+        # dialog.transient(self.root)  # <-- REMOVED: Causes issues when root is withdrawn
+        dialog.lift()                  # <-- ADDED: Bring to front
+        dialog.focus_force()           # <-- ADDED: Force focus
+        dialog.grab_set()
+        self.root.wait_window(dialog)
+        
+        return self.connection_info
 
     def _on_key_exchange_complete(self, algo, key):
         """Key Exchange tamamlandığında çağrılır."""
